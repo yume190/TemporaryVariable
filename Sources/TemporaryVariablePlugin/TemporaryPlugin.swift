@@ -8,6 +8,6 @@ import SwiftSyntaxMacros
 #endif
 struct WWDCPlugin: CompilerPlugin {
     let providingMacros: [Macro.Type] = [
-
+        InfoMacro.self
     ]
 }

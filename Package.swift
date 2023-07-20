@@ -4,13 +4,6 @@
 import PackageDescription
 import CompilerPluginSupport
 
-let settings: [SwiftSetting] = [
-    // .enableExperimentalFeature("Macros"),
-    .enableExperimentalFeature("CodeItemMacros"),
-    // ExtensionMacros
-    // .unsafeFlags(["-Xfrontend", "-dump-macro-expansions"])
-]
-
 let package = Package(
     name: "TemporaryVariable",
     platforms: [
@@ -60,6 +53,3 @@ let package = Package(
             ]),
     ]
 )
-
-
-

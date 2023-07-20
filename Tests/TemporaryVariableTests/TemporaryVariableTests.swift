@@ -98,7 +98,7 @@ final class InfoTests: XCTestCase {
         let __macro_local_7result3fMu_ = b()
         let __macro_local_7result4fMu_ = c()
         let __macro_local_7result5fMu_ = d()
-            let test1 = a(__macro_local_7result3fMu_, __macro_local_7result4fMu_, __macro_local_7result5fMu_)
+            let test2 = a(__macro_local_7result3fMu_, __macro_local_7result4fMu_, __macro_local_7result5fMu_)
         """,
         macros: [
             "info": InfoMacro.self,
