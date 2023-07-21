@@ -74,8 +74,24 @@ final class InfoRewriter<Context: MacroExpansionContext>: SyntaxRewriter {
     /// output:
     ///   r0
     override final func visit(_ node: FunctionCallExprSyntax) -> ExprSyntax {
+        let isWithouhtBase: Bool
+        if let memberAccess = node.calledExpression.as(MemberAccessExprSyntax.self) {
+            isWithouhtBase = memberAccess.base == nil
+        } else {
+            isWithouhtBase = false
+        }
+
+        return isWithouhtBase ? withoutBase(node) : withBase(node)
+    }
+
+    /// withBase:
+    ///     x.call(...)
+    ///     call(...)
+    private final func withBase(_ node: FunctionCallExprSyntax) -> ExprSyntax {
         /// call(r1, r2, ...)
         let newNode = node.with(\.argumentList, visit(node.argumentList))
+            .with(\.leadingTrivia, .spaces(0))
+            .with(\.trailingTrivia, .spaces(0))
 
         /// r0
         let variable = newVariable()
@@ -86,6 +102,16 @@ final class InfoRewriter<Context: MacroExpansionContext>: SyntaxRewriter {
 
         /// r0
         return .init(IdentifierExprSyntax(identifier: variable))
+    }
+
+    /// withoutBase: .call(...)
+    private final func withoutBase(_ node: FunctionCallExprSyntax) -> ExprSyntax {
+        /// .call(r1, r2, ...)
+        let newNode = node.with(\.argumentList, visit(node.argumentList))
+            .with(\.leadingTrivia, .spaces(0))
+            .with(\.trailingTrivia, .spaces(0))
+
+        return .init(newNode)
     }
 
     /// if Pattern is `= call(...)`

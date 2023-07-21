@@ -1,22 +1,61 @@
 import XCTest
 @testable import TemporaryVariablePlugin
 import SwiftSyntaxMacrosTestSupport
-// import SwiftCompilerPlugin
-// import SwiftSyntax
-// import SwiftSyntaxBuilder
-// import SwiftSyntaxMacros
 
 final class InfoTests: XCTestCase {
-    final func testReturn() {
+    final func testSkipWithoutBaseStaticFunction() {
         assertMacroExpansion(
         """
-        #info {
-            return something()
+        func test() -> Int {
+            #info {
+                return .x()
+            }
         }
         """,
         expandedSource:"""
-        let __macro_local_7result0fMu_ = something()
-            return __macro_local_7result0fMu_
+        func test() -> Int {
+                return .x()
+        }
+        """,
+        macros: [
+            "info": InfoMacro.self,
+        ])
+    }
+
+    final func testWithReturn() {
+        assertMacroExpansion(
+        """
+        func test() -> Int {
+            #info {
+                return x()
+            }
+        }
+        """,
+        expandedSource:"""
+        func test() -> Int {
+            let __macro_local_7result0fMu_ = x()
+                    return __macro_local_7result0fMu_
+        }
+        """,
+        macros: [
+            "info": InfoMacro.self,
+        ])
+    }
+
+    final func testWithoutReturn() {
+        assertMacroExpansion(
+        """
+        func test() -> Int {
+            #info {
+                x()
+            }
+        }
+        """,
+        expandedSource:"""
+        func test() -> Int {
+            let __macro_local_7result0fMu_ = x()
+            __macro_local_7result0fMu_
+        }
         """,
         macros: [
             "info": InfoMacro.self,
