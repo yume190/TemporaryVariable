@@ -2,6 +2,7 @@ import SwiftCompilerPlugin
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import SwiftSyntaxMacros
+import SwiftDiagnostics
 
 /// Idea
 ///
@@ -25,12 +26,18 @@ import SwiftSyntaxMacros
 ///     return something()
 /// }
 /// ```
-public struct InfoMacro: CodeItemMacro {
+public struct InfoMacro: ExpressionMacro {
     public static func expansion(
         of node: some FreestandingMacroExpansionSyntax,
         in context: some MacroExpansionContext)
-        -> [CodeBlockItemSyntax] {
-        guard let trail = node.trailingClosure else { return [] }
+        throws -> ExprSyntax {
+        guard let trail = node.trailingClosure else {
+            let diagnose: Diagnostic = Diagnostic(
+                node: node._syntaxNode,
+                message: InfoDiagnosticMessage.trailingClosureNotFound
+            )
+            throw DiagnosticsError(diagnostics: [diagnose])
+        }
         let rewriter = InfoRewriter(trail.statements.count, context)
         let result = trail.statements.enumerated().map { index, block -> [CodeBlockItemSyntax] in
             rewriter.setupIndex(index)
@@ -38,7 +45,15 @@ public struct InfoMacro: CodeItemMacro {
             return rewriter.blocks + [newBlock]
         }
 
-        return result.flatMap { $0 }
+        let list: CodeBlockItemListSyntax = .init(result.flatMap { $0 })
+
+        let closure = ClosureExprSyntax(statements: list)
+        let functionCall = FunctionCallExprSyntax(
+            callee: IdentifierExprSyntax(identifier: "info"),
+            trailingClosure: closure
+        )
+
+        return .init(functionCall)
     }
 }
 
@@ -115,11 +130,54 @@ final class InfoRewriter<Context: MacroExpansionContext>: SyntaxRewriter {
     }
 
     /// if Pattern is `= call(...)`
-    override func visit(_ node: InitializerClauseSyntax) -> InitializerClauseSyntax {
+    override final func visit(_ node: InitializerClauseSyntax) -> InitializerClauseSyntax {
         guard let functionCall = node.value.as(FunctionCallExprSyntax.self) else {
             return node
         }
         let newFunctionCall = functionCall.with(\.argumentList, visit(functionCall.argumentList))
         return node.with(\.value, .init(newFunctionCall))
     }
+
+    // MARK: - Skip Start
+    override final func visit(_ node: CodeBlockItemSyntax) -> CodeBlockItemSyntax {
+        /// skip call(...)
+        ///   ex: print(...)
+        if let functionCall = node.item.as(FunctionCallExprSyntax.self) {
+            let newItem = functionCall.with(\.argumentList, visit(functionCall.argumentList))
+            return node.with(\.item, .init(newItem))
+        }
+
+        return node.with(\.item, visit(node.item))
+    }
+    
+    /// Skip inner Function
+    override final func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
+        return .init(node)
+    }
+    
+    /// Skip DeclGroupSyntax
+    override final func visit(_ node: ActorDeclSyntax) -> DeclSyntax {
+        return .init(node)
+    }
+    
+    override final func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
+        return .init(node)
+    }
+    
+    override final func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
+        return .init(node)
+    }
+    
+    override final func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
+        return .init(node)
+    }
+    
+    override final func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
+        return .init(node)
+    }
+    
+    override final func visit(_ node: StructDeclSyntax) -> DeclSyntax {
+        return .init(node)
+    }
+    // MARK: Skip End -
 }

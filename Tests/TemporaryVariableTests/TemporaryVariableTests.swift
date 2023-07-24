@@ -2,7 +2,25 @@ import XCTest
 @testable import TemporaryVariablePlugin
 import SwiftSyntaxMacrosTestSupport
 
-final class InfoTests: XCTestCase {
+
+final class InfoFailTests: XCTestCase {
+    final func testWithFail() {
+        assertMacroExpansion(
+            """
+            #info
+            """,
+            expandedSource: "",
+            diagnostics: [
+                DiagnosticSpec(message: "Can't find trail closure", line: 1, column: 1)
+            ],
+            macros: [
+                "info": InfoMacro.self,
+            ]
+        )
+    }
+}
+
+final class InfoSkipTests: XCTestCase {
     final func testSkipWithoutBaseStaticFunction() {
         assertMacroExpansion(
         """
@@ -14,34 +32,16 @@ final class InfoTests: XCTestCase {
         """,
         expandedSource:"""
         func test() -> Int {
-                return .x()
-        }
-        """,
-        macros: [
-            "info": InfoMacro.self,
-        ])
-    }
-
-    final func testWithReturn() {
-        assertMacroExpansion(
-        """
-        func test() -> Int {
-            #info {
-                return x()
+            info {
+                    return .x()
             }
         }
         """,
-        expandedSource:"""
-        func test() -> Int {
-            let __macro_local_7result0fMu_ = x()
-                    return __macro_local_7result0fMu_
-        }
-        """,
         macros: [
             "info": InfoMacro.self,
         ])
     }
-
+    
     final func testWithoutReturn() {
         assertMacroExpansion(
         """
@@ -53,8 +53,56 @@ final class InfoTests: XCTestCase {
         """,
         expandedSource:"""
         func test() -> Int {
-            let __macro_local_7result0fMu_ = x()
-            __macro_local_7result0fMu_
+            info {
+                    x()
+            }
+        }
+        """,
+        macros: [
+            "info": InfoMacro.self,
+        ])
+    }
+    
+    final func testSkipInnerFunction() {
+        assertMacroExpansion(
+        """
+        #info {
+            func a() -> Int {
+                return x()
+            }
+            x()
+        }
+        """,
+        expandedSource:"""
+        info {
+            func a() -> Int {
+                return x()
+            }
+            x()
+        }
+        """,
+        macros: [
+            "info": InfoMacro.self,
+        ])
+    }
+}
+
+final class InfoTests: XCTestCase {
+    final func testWithReturn() {
+        assertMacroExpansion(
+        """
+        func test() -> Int {
+            #info {
+                return x()
+            }
+        }
+        """,
+        expandedSource:"""
+        func test() -> Int {
+            info {
+                let __macro_local_7result0fMu_ = x()
+                        return __macro_local_7result0fMu_
+            }
         }
         """,
         macros: [
@@ -70,10 +118,12 @@ final class InfoTests: XCTestCase {
         }
         """,
         expandedSource:"""
-        let __macro_local_7result0fMu_ = d()
-        let __macro_local_7result1fMu_ = c(__macro_local_7result0fMu_)
-        let __macro_local_7result2fMu_ = b(__macro_local_7result1fMu_)
-            let test = a(__macro_local_7result2fMu_)
+        info {
+            let __macro_local_7result0fMu_ = d()
+            let __macro_local_7result1fMu_ = c(__macro_local_7result0fMu_)
+            let __macro_local_7result2fMu_ = b(__macro_local_7result1fMu_)
+                let test = a(__macro_local_7result2fMu_)
+        }
         """,
         macros: [
             "info": InfoMacro.self,
@@ -89,14 +139,16 @@ final class InfoTests: XCTestCase {
         }
         """,
         expandedSource:"""
-        let __macro_local_7result0fMu_ = d()
-        let __macro_local_7result1fMu_ = c(__macro_local_7result0fMu_)
-        let __macro_local_7result2fMu_ = b(__macro_local_7result1fMu_)
-            let test1 = a(__macro_local_7result2fMu_)
-        let __macro_local_7result3fMu_ = d()
-        let __macro_local_7result4fMu_ = c(__macro_local_7result3fMu_)
-        let __macro_local_7result5fMu_ = b(__macro_local_7result4fMu_)
-            let test2 = a(__macro_local_7result5fMu_)
+        info {
+            let __macro_local_7result0fMu_ = d()
+            let __macro_local_7result1fMu_ = c(__macro_local_7result0fMu_)
+            let __macro_local_7result2fMu_ = b(__macro_local_7result1fMu_)
+                let test1 = a(__macro_local_7result2fMu_)
+            let __macro_local_7result3fMu_ = d()
+            let __macro_local_7result4fMu_ = c(__macro_local_7result3fMu_)
+            let __macro_local_7result5fMu_ = b(__macro_local_7result4fMu_)
+                let test2 = a(__macro_local_7result5fMu_)
+        }
         """,
         macros: [
             "info": InfoMacro.self,
@@ -111,10 +163,12 @@ final class InfoTests: XCTestCase {
         }
         """,
         expandedSource:"""
-        let __macro_local_7result0fMu_ = b()
-        let __macro_local_7result1fMu_ = c()
-        let __macro_local_7result2fMu_ = d()
-            let test = a(__macro_local_7result0fMu_, __macro_local_7result1fMu_, __macro_local_7result2fMu_)
+        info {
+            let __macro_local_7result0fMu_ = b()
+            let __macro_local_7result1fMu_ = c()
+            let __macro_local_7result2fMu_ = d()
+                let test = a(__macro_local_7result0fMu_, __macro_local_7result1fMu_, __macro_local_7result2fMu_)
+        }
         """,
         macros: [
             "info": InfoMacro.self,
@@ -130,14 +184,16 @@ final class InfoTests: XCTestCase {
         }
         """,
         expandedSource:"""
-        let __macro_local_7result0fMu_ = b()
-        let __macro_local_7result1fMu_ = c()
-        let __macro_local_7result2fMu_ = d()
-            let test1 = a(__macro_local_7result0fMu_, __macro_local_7result1fMu_, __macro_local_7result2fMu_)
-        let __macro_local_7result3fMu_ = b()
-        let __macro_local_7result4fMu_ = c()
-        let __macro_local_7result5fMu_ = d()
-            let test2 = a(__macro_local_7result3fMu_, __macro_local_7result4fMu_, __macro_local_7result5fMu_)
+        info {
+            let __macro_local_7result0fMu_ = b()
+            let __macro_local_7result1fMu_ = c()
+            let __macro_local_7result2fMu_ = d()
+                let test1 = a(__macro_local_7result0fMu_, __macro_local_7result1fMu_, __macro_local_7result2fMu_)
+            let __macro_local_7result3fMu_ = b()
+            let __macro_local_7result4fMu_ = c()
+            let __macro_local_7result5fMu_ = d()
+                let test2 = a(__macro_local_7result3fMu_, __macro_local_7result4fMu_, __macro_local_7result5fMu_)
+        }
         """,
         macros: [
             "info": InfoMacro.self,

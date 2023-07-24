@@ -38,8 +38,14 @@ The expanded code
 
 ```swift
 import TemporaryVariable
+// public func info<T>(_ closure: () -> T) -> T {
+//     return closure()
+// }
+
 func test() -> Int {
-    let __macro_local_7result0fMu_ = x()
-    return __macro_local_7result0fMu_
+    info {
+        let __macro_local_7result0fMu_ = x()
+        return __macro_local_7result0fMu_
+    }
 }
 ```

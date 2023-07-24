@@ -1,7 +1,8 @@
-// swift-tools-version: 5.7
+// swift-tools-version: 5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
+import CompilerPluginSupport
 
 let package = Package(
     name: "TemporaryVariable",
@@ -24,17 +25,23 @@ let package = Package(
         ),
     ],
     targets: [
-        .target(
+        .macro(
             name: "TemporaryVariablePlugin",
             dependencies:[
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("CodeItemMacros"),
             ]
         ),
         .target(
             name: "TemporaryVariable",
             dependencies: [
                 "TemporaryVariablePlugin",
+            ],
+            swiftSettings: [
+                .enableExperimentalFeature("CodeItemMacros"),
             ]
         ),
         .testTarget(
