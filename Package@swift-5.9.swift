@@ -30,18 +30,12 @@ let package = Package(
             dependencies:[
                 .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
                 .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
-            ],
-            swiftSettings: [
-                .enableExperimentalFeature("CodeItemMacros"),
             ]
         ),
         .target(
             name: "TemporaryVariable",
             dependencies: [
                 "TemporaryVariablePlugin",
-            ],
-            swiftSettings: [
-                .enableExperimentalFeature("CodeItemMacros"),
             ]
         ),
         .testTarget(
