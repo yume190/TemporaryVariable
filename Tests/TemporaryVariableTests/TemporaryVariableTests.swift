@@ -6,10 +6,8 @@ import SwiftSyntaxMacrosTestSupport
 final class InfoFailTests: XCTestCase {
     final func testWithFail() {
         assertMacroExpansion(
-            """
-            #info
-            """,
-            expandedSource: "",
+            "#info",
+            expandedSource: "#info",
             diagnostics: [
                 DiagnosticSpec(message: "Can't find trail closure", line: 1, column: 1)
             ],

@@ -49,7 +49,7 @@ public struct InfoMacro: ExpressionMacro {
 
         let closure = ClosureExprSyntax(statements: list)
         let functionCall = FunctionCallExprSyntax(
-            callee: IdentifierExprSyntax(identifier: "info"),
+            callee: DeclReferenceExprSyntax(baseName: "info"),
             trailingClosure: closure
         )
 
@@ -104,7 +104,7 @@ final class InfoRewriter<Context: MacroExpansionContext>: SyntaxRewriter {
     ///     call(...)
     private final func withBase(_ node: FunctionCallExprSyntax) -> ExprSyntax {
         /// call(r1, r2, ...)
-        let newNode = node.with(\.argumentList, visit(node.argumentList))
+      let newNode = node.with(\.arguments, visit(node.arguments))
             .with(\.leadingTrivia, .spaces(0))
             .with(\.trailingTrivia, .spaces(0))
 
@@ -116,13 +116,13 @@ final class InfoRewriter<Context: MacroExpansionContext>: SyntaxRewriter {
         """)
 
         /// r0
-        return .init(IdentifierExprSyntax(identifier: variable))
+      return .init(DeclReferenceExprSyntax(baseName: variable))
     }
 
     /// withoutBase: .call(...)
     private final func withoutBase(_ node: FunctionCallExprSyntax) -> ExprSyntax {
         /// .call(r1, r2, ...)
-        let newNode = node.with(\.argumentList, visit(node.argumentList))
+      let newNode = node.with(\.arguments, visit(node.arguments))
             .with(\.leadingTrivia, .spaces(0))
             .with(\.trailingTrivia, .spaces(0))
 
@@ -134,7 +134,7 @@ final class InfoRewriter<Context: MacroExpansionContext>: SyntaxRewriter {
         guard let functionCall = node.value.as(FunctionCallExprSyntax.self) else {
             return node
         }
-        let newFunctionCall = functionCall.with(\.argumentList, visit(functionCall.argumentList))
+        let newFunctionCall = functionCall.with(\.arguments, visit(functionCall.arguments))
         return node.with(\.value, .init(newFunctionCall))
     }
 
@@ -143,7 +143,7 @@ final class InfoRewriter<Context: MacroExpansionContext>: SyntaxRewriter {
         /// skip call(...)
         ///   ex: print(...)
         if let functionCall = node.item.as(FunctionCallExprSyntax.self) {
-            let newItem = functionCall.with(\.argumentList, visit(functionCall.argumentList))
+          let newItem = functionCall.with(\.arguments, visit(functionCall.arguments))
             return node.with(\.item, .init(newItem))
         }
 
